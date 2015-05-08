@@ -7,7 +7,7 @@ Usage
 
 Arguments
     <ARG1>                      ( : | <name> )
-    :                           Print <str> to stdout
+    :                           Print the result to stdout
     <name>                      Name of the variable to have the result in store
     <str>                       String
 
