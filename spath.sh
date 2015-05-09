@@ -92,8 +92,7 @@ __spath_do ()
     if [[ "$1" == \: ]]; then
         printf '%s\n' "$spath_prompt";
     else
-        eval "${1}=\$spath_prompt";
-        __spath_upvar "$1" "${!1}"
+        eval "${1}=\${spath_prompt}";
     fi
 }
 
@@ -101,15 +100,5 @@ __spath_get_cols ()
 if [[ "$1" == \: ]]; then
     tput cols;
 else
-    typeset -i $1="$(tput cols)";
-    __spath_upvar "$1" "${!1}";
-fi
-
-__spath_upvar ()
-if unset -v "$1"; then
-    if (($# == 2)); then
-        eval "${1}=\${2}";
-    else
-        eval "${1}"'=("${@:2}")';
-    fi;
+    eval "${1}=\$(tput cols)";
 fi
