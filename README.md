@@ -2,8 +2,9 @@ Some shell subroutines to shorten a string, which represents a file path name.
 
 ```
 Usage
-    __spath_do() <ARG1> <str>   Shorten the string, if necessary
-    __spath_get_cols() <ARG1>   Determine the current terminal width
+    Spath::Do <ARG1> <str>      Shorten the string, if necessary. The return
+                                status is 1, if not
+    Spath::GetCols() <ARG1>     Determine the current terminal width
 
 Arguments
     <ARG1>                      ( : | <name> )

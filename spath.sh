@@ -31,74 +31,85 @@
 
 # -- FUNCTIONS.
 
-__spath_do ()
+Spath::Do ()
 {
-    (($# == 2)) || return 1;
+        (( $# == 2 )) || builtin return 1
 
-    unset -v \
-        spath_base \
-        spath_delims \
-        spath_dir \
-        spath_left \
-        spath_length \
-        spath_len_left \
-        spath_mask \
-        spath_max_len \
-        spath_name \
-        spath_prompt \
-        spath_ret \
-        spath_tmp;
+        builtin typeset \
+                spath_base \
+                spath_left \
+                spath_mask="${SPATH_MARK:- ... }" \
+                spath_name \
+                spath_prompt="$2" \
+                spath_ret \
+                spath_ref \
+                spath_status \
+                spath_tmp;
 
-    typeset \
-        spath_base= \
-        spath_left= \
-        spath_mask="${SPATH_MARK:- ... }" \
-        spath_name= \
-        spath_prompt="$2" \
-        spath_ret= \
-        spath_tmp=;
+        builtin typeset -i \
+                spath_delims= \
+                spath_dir= \
+                spath_len_left= \
+                spath_length="${SPATH_LENGTH:-35}";
 
-    typeset -i \
-        spath_delims= \
-        spath_dir= \
-        spath_len_left= \
-        spath_length="${SPATH_LENGTH:-35}";
+        builtin typeset -i \
+                spath_max_len="${COLUMNS:-$(Spath::GetCols :)} * spath_length / 100"
 
-    typeset -i spath_max_len="$((${COLUMNS:-$(__spath_get_cols :)} * $spath_length / 100))";
+        (( ${#spath_prompt} > spath_max_len )) && {
+                spath_tmp=${spath_prompt//\//}
+                spath_delims="${#spath_prompt} - ${#spath_tmp}"
 
-    ((${#spath_prompt} > spath_max_len)) && {
-        spath_tmp="${spath_prompt//\//}";
-        spath_delims="$((${#spath_prompt} - ${#spath_tmp}))";
-        while ((spath_dir < 2)); do
-            ((spath_dir == spath_delims)) && break;
-            spath_left="${spath_prompt#*/}";
-            spath_name="${spath_prompt:0:${#spath_prompt}-${#spath_left}}";
-            spath_prompt="$spath_left";
-            spath_ret="${spath_ret}${spath_name%/}/";
-            ((spath_dir++));
-        done;
-        if ((spath_delims <= 2)); then
-            spath_ret="${spath_ret}${spath_prompt##*/}";
+                while
+                        (( spath_dir < 2 ))
+                do
+                        (( spath_dir == spath_delims )) && builtin break
+                        spath_left=${spath_prompt#*/}
+                        spath_name=${spath_prompt:0:${#spath_prompt}-${#spath_left}}
+                        spath_prompt=$spath_left
+                        spath_ret=${spath_ret}${spath_name%/}/
+                        (( spath_dir++ ))
+                done
+
+                if
+                        (( spath_delims <= 2 ))
+                then
+                        spath_ret=${spath_ret}${spath_prompt##*/}
+                else
+                        spath_base=${spath_prompt##*/}
+                        spath_prompt=${spath_prompt:0:${#spath_prompt}-${#spath_base}}
+                        [[ $spath_ret == \/ ]] || spath_ret=${spath_ret%/}
+                        spath_len_left="spath_max_len - ${#spath_ret} - ${#spath_base} - ${#spath_mask}"
+                        spath_ret=${spath_ret}${spath_mask}${spath_prompt:${#spath_prompt}-${spath_len_left}}${spath_base}
+                fi
+
+                spath_prompt=$spath_ret
+        }
+
+        spath_status=$?
+
+        if
+                [[ $1 == \: ]]
+        then
+                builtin printf '%s\n' "$spath_prompt"
         else
-            spath_base="${spath_prompt##*/}";
-            spath_prompt="${spath_prompt:0:${#spath_prompt}-${#spath_base}}";
-            [[ "$spath_ret" == \/ ]] || spath_ret="${spath_ret%/}";
-            spath_len_left="$((spath_max_len - ${#spath_ret} - ${#spath_base} - ${#spath_mask}))";
-            spath_ret="${spath_ret}${spath_mask}${spath_prompt:${#spath_prompt}-${spath_len_left}}${spath_base}";
-        fi;
-        spath_prompt="$spath_ret"
-    };
+                builtin typeset -n spath_ref="$1"
+                spath_ref=$spath_prompt
+                builtin unset -n spath_ref
+        fi
 
-    if [[ "$1" == \: ]]; then
-        printf '%s\n' "$spath_prompt";
-    else
-        eval "${1}=\${spath_prompt}";
-    fi
+        builtin return $spath_status
 }
 
-__spath_get_cols ()
-if [[ "$1" == \: ]]; then
-    tput cols;
+Spath::GetCols ()
+if
+        (( $# )) || builtin return 1
+        [[ $1 == \: ]]
+then
+        command tput cols
 else
-    eval "${1}=\$(tput cols)";
+        builtin typeset -n spath_ref="$1"
+        spath_ref=$(command tput cols)
+        builtin unset -n spath_ref
 fi
+
+# vim: set ts=8 sw=8 tw=0 et :
